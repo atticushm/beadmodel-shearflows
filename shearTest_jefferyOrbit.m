@@ -25,12 +25,11 @@ tMin = 0;
 tMax = 1e-3;
 dt   = 1e-9;
 t    = [tMin:dt:tMax];
-Nt   = length(t);                                % number of time steps.
+Nt   = length(t);                               % number of time steps.
 
-b0 = L/(Nb-1)/L;                                 % equilibrium (resting) distance between beads.
+b0 = L/(Nb-1)/L;                                % equilibrium (resting) distance between beads.
 
 %% Set initial position.
-% for bead model:
 xb = zeros(3,Nb);                               % stores the xyz positions of nP particles at nt time-steps.
 xc = zeros(3);                                  % stores the xyz positions of the centre of mass at nt time-steps.
 
@@ -92,11 +91,15 @@ for n = 1:Nt
     xc = mean(xb,2);
 
     %% check filament rotation and end code if quarter-turn completed.
-    
+    if abs(xb(2,Nb,n)) < 0.01 && abs(xb(2,1,n)) < 0.01      % ie first and last beads close to x axis.
+        tFin = t(n);
+        fprintf('Filament aligned along x axis; script stopping at t=%g...',tFin)
+        return
+    end
 
     %% script progress counter.
     if mod(n,(Nt-1)/10)==0
-        fprintf('Script %g perc. complete...',count)
+        fprintf('%g perc. of time steps completed...',count)
         save('workspace_multiNb_part.mat')
         count = count+10;
     end
