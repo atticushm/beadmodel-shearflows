@@ -6,6 +6,8 @@
 % leading to very large workspace file sizes. Optimisation in this regard (ala the relaxingTest_intDynamics code)
 % needs to be implemented.
 
+% testing testing to show Cara GitHub and Atom tools.
+
 clear all; %close all
 % viewInt = 1000;
 % figure
