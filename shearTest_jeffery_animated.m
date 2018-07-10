@@ -24,7 +24,7 @@ Nb = 11;                                        % number of beads.
 epsilon = a;                                    % regularisation parameter in reg. stokeslet method.
 
 tMin = 0;
-tMax = 1e-3;
+tMax = 1e-2;
 dt   = 1e-9;
 t    = [tMin:dt:tMax];
 Nt   = length(t);                               % number of time steps.

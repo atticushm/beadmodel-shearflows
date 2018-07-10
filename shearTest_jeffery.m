@@ -6,11 +6,9 @@
 % leading to very large workspace file sizes. Optimisation in this regard (ala the relaxingTest_intDynamics code)
 % needs to be implemented.
 
-% testing testing to show Cara GitHub and Atom tools.
+% This version of the code does not produce figures and is designed for use in BlueBear.
 
-clear all; %close all
-% viewInt = 1000;
-% figure
+clear all;
 
 %% Setup - bead model.
 a    = 0.001;                                   % radius of sphere approximating each bead; non-dimensional.
@@ -24,7 +22,7 @@ Nb = 11;                                        % number of beads.
 epsilon = a;                                    % regularisation parameter in reg. stokeslet method.
 
 tMin = 0;
-tMax = 1e-3;
+tMax = 1e-2;
 dt   = 1e-9;
 t    = [tMin:dt:tMax];
 Nt   = length(t);                               % number of time steps.
@@ -63,7 +61,7 @@ for n = 1:Nt
         G = reshape(F',[1,3*Nb])';
         U(:,p) = stokeslets*G ;
     end
-    Us = [-1e4.*xb(2,:); 0; 0];    % shear flow
+    Us = [-1e4.*xb(2,:); zeros(1,Nb); zeros(1,Nb)];    % shear flow
     U  = U + Us;
 
     %% check arclength.
@@ -76,24 +74,12 @@ for n = 1:Nt
         end
     end
 
-    %% animated plot.
-    %if mod(n,viewInt)== 0
-    %    clf
-    %    hold on
-    %    figBM = draw_bm_buckling(xb,xc);
-    %    xlabel('x')
-    %    ylabel('y')
-    %    title(sprintf('s=%g; t=%g',s,t(n)))
-    %    pause(0.01)
-    %    hold off
-    %end
-
     %% update positions and centre of mass.
     xb = xb + U*dt;
     xc = mean(xb,2);
 
     %% check filament rotation and end code if quarter-turn completed.
-    if abs(xb(2,Nb,n)) < 0.01 && abs(xb(2,1,n)) < 0.01      % ie first and last beads close to x axis.
+    if abs(xb(2,Nb)) < 0.01 && abs(xb(2,1)) < 0.01      % ie first and last beads close to x axis.
         tFin = t(n);
         fprintf('Filament aligned along x axis; script stopping at t=%g...',tFin)
         return
@@ -101,7 +87,7 @@ for n = 1:Nt
 
     %% script progress counter.
     if mod(n,(Nt-1)/10)==0
-        fprintf('%g perc. of time steps completed...',count)
+        fprintf('%g perc. of time steps completed... \n',count)
         save('workspace_multiNb_part.mat')
         count = count+10;
     end
@@ -109,8 +95,9 @@ for n = 1:Nt
 end
 runtime = toc;
 save(sprintf('workspace_Nb=%g.mat',Nb))
-disp('Workspace saved. \n')
-disp('Script complete. \n')
+fprintf('Workspace saved. \n')
+fprintf('Final time: t=%g. \n',t(n))
+fprintf('Script completed in %g minutes. \n', runtime/60)
 
 %% Function definitions.
 
