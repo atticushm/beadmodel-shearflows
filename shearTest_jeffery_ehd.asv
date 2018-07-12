@@ -26,7 +26,7 @@ C     = 100000;
 % d(:,1) = d(:,1)/norm(d(:,1));   % initial config.
 
 %% Simulate over time
-rodFig = figure;
+figure
 for n = 1:Nt
 
     ph   = solvePhi(r,gamma,t(n));
@@ -40,7 +40,7 @@ for n = 1:Nt
 
     if mod(n,viewInt)== 0
         clf
-        [rodFig,vecEnds(:,n)] = drawRod(d(:,n));
+        [rodFig,vecEnd] = drawRod(d(:,n));
         pause(0.01)
     end
 
@@ -77,28 +77,33 @@ vecz   = linspace(-d(3),d(3),2);
 
 vecEnd = [vecx(end);vecy(end);vecz(end)];
 
-subplot(1,2,1)
+subplot(1,3,1)
 box on
 hold on
 rodFig = plot3(vecx,vecy,vecz,'k','Linewidth',4);
 axis([-1.1 1.1 -1.1 1.1 -1 1])
-axis square
 xlabel('$x$','interpreter','latex')
 ylabel('$y$','interpreter','latex')
 zlabel('$z$','interpreter','latex')
 hold off
-view(2) % view along z axis.
+view(2)
 
-subplot(1,2,2)
+subplot(1,3,2)
 box on 
 hold on
 rodFig = plot3(vecx,vecy,vecz,'k','Linewidth',4);
 axis([-1.1 1.1 -1.1 1.1 -1 1])
-axis square
 xlabel('$x$','interpreter','latex')
 ylabel('$y$','interpreter','latex')
 zlabel('$z$','interpreter','latex')
 hold off
-view(0,0) % view along y axis.
+view(0,0)
+
+subplot(1,3,3)
+hold on
+scatter3(vecEnd(1),vecEnd(2),vecEnd(3),'ro');
+axis([-1.1 1.1 -1.1 1.1 -1 1])
+view(3)
+
 
 end  % function

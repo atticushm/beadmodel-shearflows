@@ -2,34 +2,32 @@
 % in a shear flow. The filament is allowed to rotate a quarter turn, at which point
 % the sim is ended.
 
-clear all; %close all
+clear all; close all
 viewInt = 1000;
 figure
 
 %% Setup - bead model.
-a    = 0.001;                                   % radius of sphere approximating each bead; non-dimensional.
-mu   = 1e-3;                                    % dynamic viscosity of surrounding fluid.
-L    = 50e-6;                                   % length scale.
+a    = 0.001;                                 
+L    = 1;                                   
 
-%calB = 1e-6;                                   % non-dim constant B.
-calS = 5e4;                                     % non-dim constant S.
+calS = 5e4;                            
 
-Nb = 11;                                        % number of beads.
-epsilon = a;                                    % regularisation parameter in reg. stokeslet method.
+Nb = 11;                                    
+epsilon = a;              
 
 tMin = 0;
 tMax = 1e-2;
 dt   = 1e-9;
 t    = [tMin:dt:tMax];
-Nt   = length(t);                               % number of time steps.
+Nt   = length(t);                    
 
-b0 = L/(Nb-1)/L;                                % equilibrium (resting) distance between beads.
+b0 = 1/(Nb-1);                 
 
 %% Set initial position.
 xb = zeros(3,Nb);                               % stores the xyz positions of nP particles at nt time-steps.
 xc = zeros(3);                                  % stores the xyz positions of the centre of mass at nt time-steps.
 
-xb(2,:,1) = linspace(-L,L,Nb)/L;            % position filament along y axis.
+xb(2,:,1) = linspace(-0.5,0.5,Nb);                  % position filament along y axis.
 xc(:,1)   = mean(xb(:,:),2);                    % initial centre of mass.
 
 b0 = norm(xb(:,1)-xb(:,2));
