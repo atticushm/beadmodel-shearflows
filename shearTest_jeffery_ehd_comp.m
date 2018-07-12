@@ -6,37 +6,44 @@
 % results from elastohydrodynamics (analytical results from Kim and
 % Karilla)
 
-clear all; %close all
+clear all; close all
 viewInt = 1000;
 figure
 
-%% Setup - bead model.
-a    = 0.001;                                   % radius of sphere approximating each bead; non-dimensional.
-mu   = 1e-3;                                    % dynamic viscosity of surrounding fluid.
-L    = 1;                                       % length scale; dimensionless.
-calS = 5e4;                                     % non-dim constant S.
+%% Setup: bead model.
+a    = 0.001;                                   .
+mu   = 1e-3;
+L    = 1;
+calS = 5e4;
 
-Nb = 11;                                        % number of beads.
-epsilon = a;                                    % regularisation parameter in reg. stokeslet method.
+Nb      = 11;
+epsilon = a;
+b0      = 1/(Nb-1);
 
 tMin = 0;
 tMax = 1e-2;
 dt   = 1e-9;
 t    = [tMin:dt:tMax];
-Nt   = length(t);                            
+Nt   = length(t);
 
-b0 = 1/(Nb-1);                     
+%% Setup: elastohydrodynamics.
+r     = 1000;
+gamma = -1e4;
+d     = zeros(3,Nt);
+C     = 100000;
 
 %% Set initial position.
-xb = zeros(3,Nb);                               % stores the xyz positions of nP particles at nt time-steps.
-xc = zeros(3);                                  % stores the xyz positions of the centre of mass at nt time-steps.
+xb = zeros(3,Nb);
+xc = zeros(3);
 
-xb(2,:,1) = linspace(-L/2,L/2,Nb)/L;            % position filament along y axis.
-xc(:,1)   = mean(xb(:,:),2);                    % initial centre of mass.
+xb(2,:,1) = linspace(-L/2,L/2,Nb)/L;
+xc(:,1)   = mean(xb(:,:),2);
 
 %% Main
 count = 10;
 tic;
+rodFig  = figure;
+beadFig = figure;
 for n = 1:Nt
 
     F  = zeros(3,Nb);
@@ -60,6 +67,16 @@ for n = 1:Nt
     Us = [-1e4.*xb(2,:); zeros(1,Nb); zeros(1,Nb)];    % xy planar shear flow
     U  = U + Us;
 
+    %% EHD analytical solution.
+    ph   = solvePhi(r,gamma,t(n));
+    thet = solveTheta(C,r,ph);
+
+    d1 = sin(thet)*cos(ph);
+    d2 = sin(thet)*sin(ph);
+    d3 = cos(thet);
+
+    d(:,n)  = [d1;d2;d3];
+
     %% check arclength.
     s = 0;
     for p = 1:Nb-1
@@ -73,10 +90,8 @@ for n = 1:Nt
     %% animated plot.
     if mod(n,viewInt)== 0
         clf
-        hold on
-        figBM = draw_bm_buckling(xb,xc);
-        xlabel('x')
-        ylabel('y')
+        beadFig = drawBeads(xb);
+        rodFig  = drawRod(d(:,n));
         pause(0.01)
         hold off
     end
@@ -101,24 +116,25 @@ for n = 1:Nt
 
 end
 runtime = toc;
-save(sprintf('workspace_Nb=%g.mat',Nb))
-fprintf('Workspace saved. \n')
+% save(sprintf('workspace_ehd_bm_comp.mat',Nb))
+% fprintf('Workspace saved. \n')
 fprintf('Final time: t=%g. \n',t(n))
 fprintf('Script completed in %g minutes. \n', runtime/60)
 
 %% Function definitions.
 
-function fig = draw_bm_buckling(x,xc)
+function fig = drawBeads(x)
 
 Nb = size(x,2);
 
 fig1 = scatter3(x(1,:),x(2,:),x(3,:),30,'ro','filled');
 axis([-1.1 1.1 -1.1 1.1 0 1])
+axis square
 view(2)
 % axis equal
-xlabel('x')
-ylabel('y')
-zlabel('z')
+xlabel('$x$','interpreter','latex')
+ylabel('$y$','interpreter','latex')
+zlabel('$z$','interpreter','latex')
 grid on
 hold on
 lines = zeros(3,100,Nb-1);
@@ -267,3 +283,54 @@ A3 = horzcat(Szx, Szy, Szz);
 S = vertcat(A1, A2, A3);
 
 end
+
+function [ theta ] = solveTheta( C,r,phi )
+% Analytical solution for the theta component of the slender body orientation vector.
+
+theta = C*r*(r^2*(cos(phi)^2) + sin(phi)^2 )^(-1/2);
+theta = atan(theta);
+
+end  % function
+
+function [ phi ] = solvePhi( r,gamma,t )
+% Analytical solution for the phi component of the slender body orientation vector.
+
+phi = -r*tan( (gamma*t)/(r+(1/r)) );
+phi = atan(phi);
+
+end  % function
+
+function [ rodFig,vecEnd ] = drawRod( d)
+% Draws rod given axis of symmetry vector d at time t(n)
+
+vecx   = linspace(-d(1),d(1),2);
+vecy   = linspace(-d(2),d(2),2);
+vecz   = linspace(-d(3),d(3),2);
+
+vecEnd = [vecx(end);vecy(end);vecz(end)];
+
+subplot(1,2,1)
+box on
+hold on
+rodFig = plot3(vecx,vecy,vecz,'k','Linewidth',4);
+axis([-1.1 1.1 -1.1 1.1 -1 1])
+axis square
+xlabel('$x$','interpreter','latex')
+ylabel('$y$','interpreter','latex')
+zlabel('$z$','interpreter','latex')
+hold off
+view(2) % view along z axis.
+
+subplot(1,2,2)
+box on
+hold on
+rodFig = plot3(vecx,vecy,vecz,'k','Linewidth',4);
+axis([-1.1 1.1 -1.1 1.1 -1 1])
+axis square
+xlabel('$x$','interpreter','latex')
+ylabel('$y$','interpreter','latex')
+zlabel('$z$','interpreter','latex')
+hold off
+view(0,0) % view along y axis.
+
+end  % function

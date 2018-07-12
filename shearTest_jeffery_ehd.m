@@ -40,7 +40,7 @@ for n = 1:Nt
 
     if mod(n,viewInt)== 0
         clf
-        [rodFig,vecEnds(:,n)] = drawRod(d(:,n));
+        rodFig = drawRod(d(:,n));
         pause(0.01)
     end
 
@@ -90,7 +90,7 @@ hold off
 view(2) % view along z axis.
 
 subplot(1,2,2)
-box on 
+box on
 hold on
 rodFig = plot3(vecx,vecy,vecz,'k','Linewidth',4);
 axis([-1.1 1.1 -1.1 1.1 -1 1])
