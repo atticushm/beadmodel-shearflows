@@ -2,12 +2,6 @@
 % in a shear flow. The filament is allowed to rotate a quarter turn, at which point
 % the sim is ended.
 
-% Note that this code currently stores the bead location at every time step,
-% leading to very large workspace file sizes. Optimisation in this regard (ala the relaxingTest_intDynamics code)
-% needs to be implemented.
-
-% testing testing to show Cara GitHub and Atom tools.
-
 clear all; %close all
 viewInt = 1000;
 figure
@@ -35,7 +29,7 @@ b0 = L/(Nb-1)/L;                                % equilibrium (resting) distance
 xb = zeros(3,Nb);                               % stores the xyz positions of nP particles at nt time-steps.
 xc = zeros(3);                                  % stores the xyz positions of the centre of mass at nt time-steps.
 
-xb(2,:,1) = linspace(-L/2,L/2,Nb)/L;            % position filament along y axis.
+xb(2,:,1) = linspace(-L,L,Nb)/L;            % position filament along y axis.
 xc(:,1)   = mean(xb(:,:),2);                    % initial centre of mass.
 
 b0 = norm(xb(:,1)-xb(:,2));
@@ -70,9 +64,9 @@ for n = 1:Nt
     s = 0;
     for p = 1:Nb-1
         s = s + norm(xb(:,p+1) - xb(:,p));
-        if s > 1.2
+        if s > 2.2
             fprintf('Filament inextensibility broken... \n')
-            breakPlot = draw_bm_buckling(x,xc);
+            breakPlot = draw_bm(xb,xc);
         end
     end
 
@@ -80,7 +74,7 @@ for n = 1:Nt
     if mod(n,viewInt)== 0
         clf
         hold on
-        figBM = draw_bm_buckling(xb,xc);
+        figBM = draw_bm(xb,xc);
         xlabel('x')
         ylabel('y')
         pause(0.01)
@@ -114,7 +108,7 @@ fprintf('Script completed in %g minutes. \n', runtime/60)
 
 %% Function definitions.
 
-function fig = draw_bm_buckling(x,xc)
+function fig = draw_bm(x,xc)
 
 Nb = size(x,2);
 
@@ -132,7 +126,7 @@ for kk = 1:Nb-1
     lines(1,:,kk) = linspace(x(1,kk),x(1,kk+1));
     lines(2,:,kk) = linspace(x(2,kk),x(2,kk+1));
     lines(3,:,kk) = linspace(x(3,kk),x(3,kk+1));
-    fig = plot3(squeeze(lines(1,:,kk)),squeeze(lines(2,:,kk)),squeeze(lines(3,:,kk)),'r');
+    fig = plot3(squeeze(lines(1,:,kk)),squeeze(lines(2,:,kk)),squeeze(lines(3,:,kk)),'r','LineWidth',1.7);
 end
 scatter3(xc(1),xc(2),xc(3),50, 'rx','Linewidth',2)
 
