@@ -7,102 +7,104 @@
 % Karilla)
 
 clear all; close all
-figs.viewInt = 1000;
+viewInt = 1000;
+figure
 
 %% Setup: bead model.
-beads.a    = 0.001;
-beads.L    = 1;
-beads.calS = 5e4;
+a    = 0.001;
+mu   = 1e-3;
+L    = 1;
+calS = 5e4;
 
-beads.Nb      = 11;
-beads.epsilon = beads.a;
-beads.b0      = 1/(beads.Nb-1);
+Nb      = 11;
+epsilon = a;
+b0      = 1/(Nb-1);
 
 time.tMin = 0;
 time.tMax = 1e-2;
 time.dt   = 1e-9;
-time.t    = [time.tMin:time.dt:time.tMax];
-time.Nt   = length(time.t);
+time.t    = [tMin:dt:tMax];
+time.Nt   = length(t);
 
 %% Setup: elastohydrodynamics.
-ehd.r     = 1000;
-ehd.gamma = -1e4;
-ehd.d     = zeros(3,time.Nt);
-ehd.C     = 1e10;
+r     = 1000;
+gamma = -1e4;
+d     = zeros(3,Nt);
+C     = 100000;
 
 %% Set initial position.
-beads.pos        = zeros(3,beads.Nb);
-beads.pos(1,:)   = linspace(-beads.L/2,beads.L/2,beads.Nb)/beads.L;
+xb        = zeros(3,Nb);
+xb(2,:,1) = linspace(-L/2,L/2,Nb)/L;
 
 %% Main
 count = 10;
 tic;
-figs.f1 = figure;
+f1 = figure;
 for n = 1:time.Nt
 
-    beads.F  = zeros(3,beads.Nb);
-    beads.U  = zeros(3,beads.Nb);
+    F  = zeros(3,Nb);
+    U  = zeros(3,Nb);
 
     %% bending forces.
-    beads.Fb = get_bending_forces(beads.pos);
-    beads.F = beads.F + (beads.Nb-1).*beads.Fb;
+    Fb = get_bending_forces(xb);
+    F = F + (Nb-1).*Fb;
 
     %% spring forces.
-    beads.Fs = get_spring_forces(beads.pos, beads.b0);
-    beads.F  = beads.F + beads.calS.*beads.Fs;
+    Fs = get_spring_forces(xb, b0);
+    F  = F + calS.*Fs;
 
     %% hydrodynamic interactions.
-    for p = 1:beads.Nb
+    for p = 1:Nb
         clear stokeslets
-        stokeslets = get_stokeslets(beads.pos, beads.pos(:,p),beads.epsilon);
-        G = reshape(beads.F',[1,3*beads.Nb])';
-        beads.U(:,p) = stokeslets*G ;
+        stokeslets = get_stokeslets(xb, xb(:,p),epsilon);
+        G = reshape(F',[1,3*Nb])';
+        U(:,p) = stokeslets*G ;
     end
-    beads.Us = [zeros(1,beads.Nb); -ehd.gamma.*beads.pos(1,:); zeros(1,beads.Nb)];    % planar shear flow
-    beads.U  = beads.U + beads.Us;
+    Us = [-1e4.*xb(2,:); zeros(1,Nb); zeros(1,Nb)];    % xy planar shear flow
+    U  = U + Us;
 
     %% EHD analytical solution.
-    ehd.ph   = solvePhi(ehd.r,ehd.gamma,time.t(n));
-    ehd.thet = solveTheta(ehd.C,ehd.r,ehd.ph);
+    ph   = solvePhi(r,gamma,t(n));
+    thet = solveTheta(C,r,ph);
 
-    ehd.d(1) = sin(ehd.thet)*cos(ehd.ph);
-    ehd.d(2) = sin(ehd.thet)*sin(ehd.ph);
-    ehd.d(3) = cos(ehd.thet);
+    d1 = sin(thet)*cos(ph);
+    d2 = sin(thet)*sin(ph);
+    d3 = cos(thet);
+
+    d(:,n)  = [d1;d2;d3];
 
     %% check arclength.
-    beads.s = 0;
-    for p = 1:beads.Nb-1
-        beads.s = beads.s + norm(beads.pos(:,p+1) - beads.pos(:,p));
-        if beads.s > 1.2
+    s = 0;
+    for p = 1:Nb-1
+        s = s + norm(xb(:,p+1) - xb(:,p));
+        if s > 1.2
             fprintf('Filament inextensibility broken... \n')
-            figs.breakPlot = drawBeads(x);
+            breakPlot = drawBeads(x,xc);
         end
     end
 
     %% animated plot.
-    if mod(n,figs.viewInt)== 0
+    if mod(n,viewInt)== 0
         clf
         hold on
-        figs.f1              = drawBeads(beads.pos);
-        [ehd.vecEnd,figs.f1] = drawRod(ehd.d(:,n));
-        axis([-0.6 0.6 -0.6 0.6 -0.6 0.6])
-        view(2)
+        beadFig = drawBeads(xb);
+        rodFig  = drawRod(d(:,n));
         pause(0.01)
         hold off
     end
 
     %% update positions.
-    beads.pos = beads.pos + beads.U*time.dt;
+    xb = xb + U*time.dt;
 
     %% check filament rotation and end code if quarter-turn completed.
-%     if abs(xb(2,Nb)) < 0.01 && abs(xb(2,1)) < 0.01      % ie first and last beads close to x axis.
-%         time.tFin = time.t(n);
-%         fprintf('Filament aligned along x axis; script stopping at t=%g...', time.tFin)
-%         return
-%     end
+    if abs(xb(2,Nb)) < 0.01 && abs(xb(2,1)) < 0.01      % ie first and last beads close to x axis.
+        time.tFin = time.t(n);
+        fprintf('Filament aligned along x axis; script stopping at t=%g...',tFin)
+        return
+    end
 
     %% script progress counter.
-    if mod(n,(time.Nt-1)/10)==0
+    if mod(n,(Nt-1)/10)==0
         fprintf('%g perc. of time steps completed... \n',count)
         save('workspace_multiNb_part.mat')
         count = count+10;
@@ -120,7 +122,8 @@ fprintf('Script completed in %g minutes. \n', time.runtime/60)
 function fig = drawBeads(x)
 % Modified version of bead figure drawing code excluding CoM plot.
 
-Nb   = size(x,2);
+Nb = size(x,2);
+
 fig1 = scatter3(x(1,:),x(2,:),x(3,:),30,'ro','filled');
 axis([-1.1 1.1 -1.1 1.1 0 1])
 axis square
@@ -136,9 +139,8 @@ for kk = 1:Nb-1
     lines(1,:,kk) = linspace(x(1,kk),x(1,kk+1));
     lines(2,:,kk) = linspace(x(2,kk),x(2,kk+1));
     lines(3,:,kk) = linspace(x(3,kk),x(3,kk+1));
-    fig = plot3(squeeze(lines(1,:,kk)),squeeze(lines(2,:,kk)),squeeze(lines(3,:,kk)),'r','Linewidth',2);
+    fig = plot3(squeeze(lines(1,:,kk)),squeeze(lines(2,:,kk)),squeeze(lines(3,:,kk)),'r');
 end
-hold off
 end
 
 function [ rodFig,vecEnd ] = drawRod( d)
@@ -151,9 +153,10 @@ vecy   = linspace(-d(2)/2,d(2)/2,2);
 vecz   = linspace(-d(3)/2,d(3)/2,2);
 
 vecEnd = [vecx(end);vecy(end);vecz(end)];
+
 box on
 hold on
-rodFig = plot3(vecx,vecy,vecz,'b','Linewidth',4);
+rodFig = plot3(vecx,vecy,vecz,'k','Linewidth',4);
 axis([-1.1 1.1 -1.1 1.1 -1 1])
 axis square
 xlabel('$x$','interpreter','latex')
