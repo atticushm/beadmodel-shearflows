@@ -21,7 +21,7 @@ beads.epsilon = beads.a;
 beads.b0      = 1/(beads.Nb-1);
 
 time.tMin = 0;
-time.tMax = 1e-2;
+time.tMax = 1e-4;
 time.dt   = 1e-9;
 time.t    = [time.tMin:time.dt:time.tMax];
 time.Nt   = length(time.t);

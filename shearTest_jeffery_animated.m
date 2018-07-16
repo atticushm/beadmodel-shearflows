@@ -16,7 +16,7 @@ Nb = 11;
 epsilon = a;              
 
 tMin = 0;
-tMax = 1e-2;
+tMax = 1e-4;
 dt   = 1e-9;
 t    = [tMin:dt:tMax];
 Nt   = length(t);                    
