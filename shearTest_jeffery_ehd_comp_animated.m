@@ -6,22 +6,21 @@
 % results from elastohydrodynamics (analytical results from Kim and
 % Karilla)
 
-% this script does not draw figures. Use xx_animated.m version for that.
-
 clear all; %close all
-figs.viewInt = 100;
+figs.viewInt = 1000;
 
 %% Setup: bead model.
 beads.a    = 0.001;
 beads.L    = 1;
 beads.calS = 5e4;
 
-beads.Nb      = 11;
+beads.Nb      = 31;
 beads.epsilon = beads.a;
 beads.b0      = 1/(beads.Nb-1);
 
 time.tMin = 0;
-time.tMax = 1e-2;
+% time.tMax = 1e-2;
+time.tMax = 3.2e-5;
 time.dt   = 1e-9;
 time.t    = [time.tMin:time.dt:time.tMax];
 time.Nt   = length(time.t);
@@ -87,20 +86,26 @@ for n = 1:time.Nt
     if mod(n,figs.viewInt)== 0
         clf
         hold on
-        figs.f1 = figure('visible','off');
-        
+        figs.f1 = subplot(1,2,1);
         [figs.f1,ehd.vecEnd] = drawRod(ehd.d(:,n));
+        figs.f1              = drawBeads(beads.pos);
+        axis([-0.6 0.6 -0.6 0.6 -0.6 0.6])
+        view(2)
+%         figs.str = sprintf(' \\gamma =  %g ', ehd.gamma,'interpreter','latex');
+%         figs.dim = [.69 .6 .5 .3];
+%         annotation('textbox',figs.dim,'string',figs.str,'FitBoxToText','on')
         
-        hold off      
+        hold off
+        pause(0.01)        
         error.theta(count2) = delTheta(ehd.vecEnd,beads.pos(:,end));
         error.t(count2)  = time.t(n);
         count2 = count2+1;
-   
     end
 
     %% update positions.
     beads.pos = beads.pos + beads.U*time.dt;
     
+
     %% check filament rotation and end code if quarter-turn completed.
 %     if abs(xb(1,Nb)) < 0.01 && abs(xb(1,1)) < 0.01      % ie first and last beads close to y axis.
 %         time.tFin = time.t(n);
@@ -111,15 +116,22 @@ for n = 1:time.Nt
     %% script progress counter.
     if mod(n,(time.Nt-1)/10)==0
         fprintf('%g perc. of time steps completed... \n',count1)
-        save('workspace_jeffery_ehd_comp_part.mat')
+        save('workspace_multiNb_part.mat')
         count1 = count1+10;
     end
 
 end
 
+%% error plot.
+figs.f2 = subplot(1,2,2);
+figs.f2 = plot(error.t,error.theta);
+xlabel('time','interpreter','latex')
+ylabel('angular error','interpreter','latex')
+axis square
+
 time.runtime = toc;
-save(sprintf('workspace_jeffery_ehd_comp.mat'))
-fprintf('Workspace saved. \n')
+% save(sprintf('workspace_ehd_bm_comp.mat',Nb))
+% fprintf('Workspace saved. \n')
 fprintf('Final time: t=%g. \n',time.t(n))
 fprintf('Script completed in %g minutes. \n', time.runtime/60)
 
