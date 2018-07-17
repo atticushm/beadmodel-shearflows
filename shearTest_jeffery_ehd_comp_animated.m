@@ -6,7 +6,7 @@
 % results from elastohydrodynamics (analytical results from Kim and
 % Karilla)
 
-clear all; close all
+clear all; clf
 figs.viewInt = 1000;
 
 %% Setup: bead model.
@@ -18,6 +18,8 @@ beads.calS = 5e4;
 beads.Nb      = 11;
 beads.epsilon = beads.a;
 beads.b0      = 1/(beads.Nb-1);
+
+muMult   = 1;
 
 time.tMin = 0;
 time.tMax = 1e-4;
@@ -31,11 +33,20 @@ ehd.gamma = -1e4;
 ehd.d     = zeros(3,time.Nt);
 ehd.C     = 1e10;
 
-muMult   = 2;
-
 %% Set initial position.
-beads.pos        = zeros(3,beads.Nb);
-beads.pos(1,:)   = linspace(-beads.L/2,beads.L/2,beads.Nb)/beads.L;
+% beads.pos        = zeros(3,beads.Nb);
+% beads.pos(1,:)   = linspace(-beads.L/2,beads.L/2,beads.Nb)/beads.L;
+
+beads.thMin = 0;
+beads.thMax = 0;
+beads.th    = linspace(beads.thMin,beads.thMax,beads.Nb);
+
+beads.pos        = zeros(3,beads.Nb-1);
+beads.pos(1:2,1) = [-0.5;0];
+for n = 1:beads.Nb-1
+    beads.pos(1,n+1) = beads.pos(1,n) + beads.b0*cos( beads.th(n));
+    beads.pos(2,n+1) = beads.pos(2,n) + beads.b0*sin( beads.th(n));
+end
 
 %% Main
 count1 = 10;
@@ -48,12 +59,10 @@ for n = 1:time.Nt
 
     %% bending forces.
     beads.Fb = get_bending_forces(beads.pos);
-%     beads.F  = beads.F + (beads.calB)*(beads.Nb-1).*beads.Fb;
     beads.F  = beads.F + (beads.Nb-1).*beads.Fb;   
 
     %% spring forces.
     beads.Fs = get_spring_forces(beads.pos, beads.b0);
-%     beads.F  = beads.F + beads.Fs;
     beads.F  = beads.F + beads.calS.*beads.Fs;
 
     %% hydrodynamic interactions.
